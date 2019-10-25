@@ -1,6 +1,8 @@
 package com.tsystems.sfdc.csv;
 
+import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -19,6 +21,9 @@ public class CsvProcessorApplication implements ApplicationRunner {
 
 	@Autowired
 	private ApplicationContext applicationContext;
+	
+	@Autowired
+	private CsvConfig csvConfig;
 
 	public static void main(String[] args) {
 		LOG.info("Starting application ...");
@@ -30,12 +35,22 @@ public class CsvProcessorApplication implements ApplicationRunner {
 	public void run(ApplicationArguments args) throws Exception {
 		LOG.info("args: " + Arrays.stream(args.getSourceArgs()).collect(Collectors.joining("|")));
 		
-		if (args.getOptionValues("processor") == null || args.getOptionValues("processor").size() > 1) {
+		List<String> optionValues = args.getOptionValues("processor");
+		if (optionValues == null) {
 			throw new IllegalArgumentException("Please provide input parameter '--processor=...'");
 		}
 		
-		CsvProcessor csvProcessor = (CsvProcessor) applicationContext.getBean(args.getOptionValues("processor").get(0));
-		csvProcessor.processFile();;
+		Path outputFile = null;
+		for (String processor : optionValues) {
+			CsvProcessor csvProcessor = (CsvProcessor) applicationContext.getBean(processor);
+			if (outputFile != null) {
+				CsvConfigFile inputForNextProcessor = new CsvConfigFile();
+				inputForNextProcessor.setFileName(outputFile.toString());
+				csvConfig.setInputFile(inputForNextProcessor);
+			}
+			outputFile = csvProcessor.processFile();
+		}
+		
 	}
 
 }

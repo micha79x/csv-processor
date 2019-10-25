@@ -27,18 +27,21 @@ public abstract class CsvFileProcessor implements CsvProcessor {
 	
 	private CSVPrinter csvErrorFile;
 	
-	public void processFile() {
+	public Path processFile() {
 		try {
-			String inputFileName = csvConfig.getInputFile();
+			String inputFileName = csvConfig.getInputFile().getFileName();
+			LOG.info("Processing file {}.", inputFileName);
 			Path inputFile = Paths.get(inputFileName);
 			this.csvParser = CSVParser.parse(
 					inputFile, 
-					Charset.forName(csvConfig.getInputFileEncoding()), 
-					CSVFormat.RFC4180.withHeader().withDelimiter(csvConfig.getInputFileDelimter()));
+					Charset.forName(csvConfig.getInputFile().getEncoding()), 
+					CSVFormat.RFC4180.withHeader().withDelimiter(csvConfig.getInputFile().getDelimter()));
 			
 			this.prepareErrorFile();
+			LOG.info("Preparing processing records.");
 			this.beforeProcessRecords();
 			
+			LOG.info("Starting processing all records of input file {}.", inputFileName);
 			for (CSVRecord record : csvParser) {
 				try {
 					this.processRecord(record);
@@ -47,13 +50,18 @@ public abstract class CsvFileProcessor implements CsvProcessor {
 				}
 			}
 			
+			LOG.info("Post processing records.");
 			this.postProcessRecords();
+			
+			return this.getOutputFile();
 		} catch (Exception e) {
-			LOG.error("Error while processing input file {0}: {1}", csvConfig.getInputFile(), e.getMessage());
+			LOG.error("Error while processing input file {}: {}", csvConfig.getInputFile(), e.getMessage());
 			throw new RuntimeException(e);
 		} finally {
-			try { 
-				csvErrorFile.close();
+			try {
+				if (csvErrorFile != null) {
+					csvErrorFile.close();
+				}
 			} catch (IOException e) {
 				LOG.error(e.getMessage());
 			}
@@ -62,6 +70,7 @@ public abstract class CsvFileProcessor implements CsvProcessor {
 	
 	private void prepareErrorFile() throws Exception {
 		Path outputFile = Paths.get(csvConfig.getOutputFileName("_error"));
+		LOG.info("Creating error file {}.", outputFile);
 		OutputStreamWriter outputStreamWriter = new OutputStreamWriter(new FileOutputStream(outputFile.toFile()), "UTF-8");
 		csvErrorFile = new CSVPrinter(new BufferedWriter(outputStreamWriter), CSVFormat.RFC4180.withQuoteMode(csvConfig.getOutputQuoteMode()));
 		for (String header : csvParser.getHeaderNames()) {
@@ -91,6 +100,8 @@ public abstract class CsvFileProcessor implements CsvProcessor {
 		csvErrorFile.println();
 	}
 	
-	protected abstract void postProcessRecords() throws Exception; 
+	protected abstract void postProcessRecords() throws Exception;
+
+	protected abstract Path getOutputFile(); 
 
 }

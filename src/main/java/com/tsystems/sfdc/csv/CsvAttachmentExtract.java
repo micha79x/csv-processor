@@ -35,9 +35,11 @@ public class CsvAttachmentExtract extends CsvFileProcessor {
 
 	private List<String> resultHeaderNames;
 
+	private Path outputFile;
+
 	@Override
 	protected void beforeProcessRecords() throws Exception {
-		Path outputFile = Paths.get(csvConfig.getOutputFileName("_result"));
+		outputFile = Paths.get(csvConfig.getOutputFileName("_BodyRemoved"));
 		filesOutputPath = Paths.get(outputFile.getParent().toString(), "binaries",
 				String.valueOf(System.currentTimeMillis()));
 		Files.createDirectories(filesOutputPath);
@@ -72,8 +74,7 @@ public class CsvAttachmentExtract extends CsvFileProcessor {
 
 	private Path extractBodyToFile(CSVRecord record, Path outputPath) throws IOException {
 		byte[] fileRaw = Base64.getDecoder().decode(record.get("Body").getBytes(StandardCharsets.UTF_8));
-		// TODO String fullFileName = record.get("Name").replaceAll("[\\\\/:*?\"<>|]", "");
-		String fullFileName = record.get("Name");
+		String fullFileName = record.get("Name").replaceAll("[\\\\/:*?\"<>|]", "");
 		String nameWithoutExt = FilenameUtils.getBaseName(fullFileName);
 		String extension = FilenameUtils.getExtension(fullFileName);
 		Path destinationFile = Paths.get(outputPath.toString(), record.get("Id") + "_" + fullFileName);
@@ -85,6 +86,11 @@ public class CsvAttachmentExtract extends CsvFileProcessor {
 		}
 		Files.write(destinationFile, fileRaw);
 		return destinationFile;
+	}
+
+	@Override
+	protected Path getOutputFile() {
+		return outputFile;
 	}
 
 }
