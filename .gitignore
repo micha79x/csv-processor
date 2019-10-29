@@ -29,3 +29,5 @@ build/
 
 ### VS Code ###
 .vscode/
+/csv-attachment-extract.properties
+/csv-id-replace.properties
