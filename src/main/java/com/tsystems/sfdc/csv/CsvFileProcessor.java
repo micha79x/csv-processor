@@ -28,6 +28,7 @@ public abstract class CsvFileProcessor implements CsvProcessor {
 	private CSVPrinter csvErrorFile;
 	
 	public Path processFile() {
+		long currentRecordNumber = -1;
 		try {
 			String inputFileName = csvConfig.getInputFile().getFileName();
 			LOG.info("Processing file {}.", inputFileName);
@@ -43,6 +44,7 @@ public abstract class CsvFileProcessor implements CsvProcessor {
 			
 			LOG.info("Starting processing all records of input file {}.", inputFileName);
 			for (CSVRecord record : csvParser) {
+				currentRecordNumber = csvParser.getRecordNumber();
 				try {
 					this.processRecord(record);
 				} catch (Exception e) {
@@ -55,7 +57,7 @@ public abstract class CsvFileProcessor implements CsvProcessor {
 			
 			return this.getOutputFile();
 		} catch (Exception e) {
-			LOG.error("Error while processing input file {}: {}", csvConfig.getInputFile(), e.getMessage());
+			LOG.error("Error while processing record number {} of input file {}: {}", currentRecordNumber, csvConfig.getInputFile(), e.getMessage());
 			throw new RuntimeException(e);
 		} finally {
 			try {
