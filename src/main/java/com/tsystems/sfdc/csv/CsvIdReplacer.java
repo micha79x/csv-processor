@@ -9,9 +9,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -79,10 +77,9 @@ public class CsvIdReplacer extends CsvFileProcessor {
 
 	@Override
 	protected void processRecord(CSVRecord record) throws Exception {
-		List<String> replacementColumns = Arrays.asList("ParentId");
 		Map<String, String> replacedValues = new HashMap<>();
 		
-		for (String columnToBeReplaced : replacementColumns) {
+		for (String columnToBeReplaced : csvConfig.getColumnsToReplace()) {
 			String originalValue = record.get(columnToBeReplaced);
 			String replacedValue = Optional.ofNullable(replacementMap.get(originalValue))
 					.orElseThrow(() -> new IllegalArgumentException("No replacement found for value '" + originalValue + "' of column '" + columnToBeReplaced + "'."));
