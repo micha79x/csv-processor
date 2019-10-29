@@ -73,7 +73,7 @@ public class CsvAttachmentExtract extends CsvFileProcessor {
 	}
 
 	private Path extractBodyToFile(CSVRecord record, Path outputPath) throws IOException {
-		byte[] fileRaw = Base64.getDecoder().decode(record.get("Body").getBytes(StandardCharsets.UTF_8));
+		byte[] fileRaw = Base64.getDecoder().decode(record.get(csvConfig.getBase64Column()).getBytes(StandardCharsets.UTF_8));
 		String fullFileName = record.get("Name").replaceAll("[\\\\/:*?\"<>|]", "");
 		String nameWithoutExt = FilenameUtils.getBaseName(fullFileName);
 		String extension = FilenameUtils.getExtension(fullFileName);
@@ -84,6 +84,7 @@ public class CsvAttachmentExtract extends CsvFileProcessor {
 					record.get("Id") + "_" + nameWithoutExt + "_" + counter + "." + extension);
 			counter++;
 		}
+		LOG.debug("Extracting file {}.", destinationFile);
 		Files.write(destinationFile, fileRaw);
 		return destinationFile;
 	}
