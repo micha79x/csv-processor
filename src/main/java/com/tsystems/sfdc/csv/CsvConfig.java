@@ -14,11 +14,17 @@ public class CsvConfig {
 
 	private CsvConfigFile inputFile;
 
-	private QuoteMode outputQuoteMode;
+	private QuoteMode outputQuoteMode = QuoteMode.ALL;
 
 	private List<CsvConfigMappingInput> replacements = new ArrayList<>();
 	
+	private List<String> columnsToReplace = new ArrayList<>();
+	
 	private List<String> columns = new ArrayList<>();
+	
+	private String filter;
+	
+	private String base64Column = "Body";
 
 	public List<CsvConfigMappingInput> getReplacements() {
 		return replacements;
@@ -55,6 +61,30 @@ public class CsvConfig {
 
 	public void setColumns(List<String> columns) {
 		this.columns = columns;
+	}
+
+	public List<String> getColumnsToReplace() {
+		return columnsToReplace;
+	}
+
+	public void setColumnsToReplace(List<String> columnsToReplace) {
+		this.columnsToReplace = columnsToReplace;
+	}
+
+	public String getFilter() {
+		return filter;
+	}
+
+	public void setFilter(String filter) {
+		this.filter = filter;
+	}
+
+	public String getBase64Column() {
+		return this.base64Column;
+	}
+
+	public void setBase64Column(String base64Column) {
+		this.base64Column = base64Column;
 	}
 
 }
