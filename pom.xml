@@ -10,10 +10,10 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.tsystems.sfdc.csv</groupId>
-	<artifactId>csv-attachment-extract</artifactId>
+	<artifactId>csv-processor</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>csv-attachment-extract</name>
-	<description>Extract Base64 Attachments from CSV</description>
+	<name>csv-processor</name>
+	<description>Various tasks to process CSV files</description>
 
 	<properties>
 		<java.version>1.8</java.version>
