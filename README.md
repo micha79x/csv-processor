@@ -54,3 +54,10 @@ The process will create a new output file named after the input file appended wi
 In addition it will add a new sub-directory relative to the input file, named after `./binaries/$UNIX_TIMESTAMP$/` containing all the distinct files extracted from the base64 content in the CSV.
 Also, the resulting CSV file will have the base64-column removed and a new column `PathOnClient` added, containing the absolute file path pointing to the extracted file.
 
+## CsvSplit
+
+* `csv.split.column` - The column of which the single CSV record's value is used to determine the split bucket
+* `csv.split.expression` - The expression to be applied to the value extracted from column `csv.split.column`. If not provided the value itself will be used as split bucket.
+* `csv.split.to-subfolder` - If set to true, the result files will be written to a sub folder named "splits"
+
+ The process will create output files named after the input file appended by each bucket derived via `csv.split.expression`.

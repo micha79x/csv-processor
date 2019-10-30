@@ -1,9 +1,12 @@
 package com.tsystems.sfdc.csv;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.csv.QuoteMode;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
@@ -17,14 +20,16 @@ public class CsvConfig {
 	private QuoteMode outputQuoteMode = QuoteMode.ALL;
 
 	private List<CsvConfigMappingInput> replacements = new ArrayList<>();
-	
+
 	private List<String> columnsToReplace = new ArrayList<>();
-	
+
 	private List<String> columns = new ArrayList<>();
-	
+
 	private String filter;
-	
+
 	private String base64Column = "Body";
+
+	private CsvConfigSplit split;
 
 	public List<CsvConfigMappingInput> getReplacements() {
 		return replacements;
@@ -43,8 +48,22 @@ public class CsvConfig {
 	}
 
 	public String getOutputFileName(String fileNameAddition) {
-		return StringUtils.stripFilenameExtension(inputFile.getFileName()) + fileNameAddition + "."
-				+ StringUtils.getFilenameExtension(inputFile.getFileName());
+		return getOutputFileName(null, fileNameAddition);
+	}
+	
+	public String getOutputFileName(String subdirectory, String fileNameAddition) {
+		Path inputFilePath = Paths.get(inputFile.getFileName());
+		Path baseDir = inputFilePath.getParent();
+		Path fileName = inputFilePath.getFileName(); 
+
+		String targetFileName = StringUtils.stripFilenameExtension(fileName.toString()) + fileNameAddition.replaceAll("[\\\\/:*?\"<>|]", "") + "."
+				+ StringUtils.getFilenameExtension(fileName.toString());
+		
+		if (Strings.isNotBlank(subdirectory)) {
+			return Paths.get(baseDir.toString(), subdirectory, targetFileName).toString();
+		} else {
+			return Paths.get(baseDir.toString(), targetFileName).toString();
+		}
 	}
 
 	public QuoteMode getOutputQuoteMode() {
@@ -85,6 +104,14 @@ public class CsvConfig {
 
 	public void setBase64Column(String base64Column) {
 		this.base64Column = base64Column;
+	}
+
+	public CsvConfigSplit getSplit() {
+		return split;
+	}
+
+	public void setSplit(CsvConfigSplit split) {
+		this.split = split;
 	}
 
 }
