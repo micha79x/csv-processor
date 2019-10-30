@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -27,6 +28,10 @@ public abstract class CsvFileProcessor implements CsvProcessor {
 	
 	private CSVPrinter csvErrorFile;
 	
+	private boolean recordErrorOccured = false;
+
+	private Path errorFile;
+	
 	public Path processFile() {
 		long currentRecordNumber = -1;
 		try {
@@ -48,6 +53,7 @@ public abstract class CsvFileProcessor implements CsvProcessor {
 				try {
 					this.processRecord(record);
 				} catch (Exception e) {
+					recordErrorOccured = true;
 					this.handleRecordFailed(record, e);
 				}
 			}
@@ -64,6 +70,12 @@ public abstract class CsvFileProcessor implements CsvProcessor {
 				if (csvErrorFile != null) {
 					csvErrorFile.close();
 				}
+				// if no error occurred we can delete the error file
+				if (!recordErrorOccured && errorFile != null && Files.exists(errorFile)) {
+					Files.delete(errorFile);
+				} else {
+					LOG.error("Errors occured. Check {} for details!", errorFile.toString());
+				}
 			} catch (IOException e) {
 				LOG.error(e.getMessage());
 			}
@@ -71,9 +83,9 @@ public abstract class CsvFileProcessor implements CsvProcessor {
 	}
 	
 	private void prepareErrorFile() throws Exception {
-		Path outputFile = Paths.get(csvConfig.getOutputFileName("_error"));
-		LOG.info("Creating error file {}.", outputFile);
-		OutputStreamWriter outputStreamWriter = new OutputStreamWriter(new FileOutputStream(outputFile.toFile()), "UTF-8");
+		errorFile = Paths.get(csvConfig.getOutputFileName("_error"));
+		LOG.info("Creating error file {}.", errorFile);
+		OutputStreamWriter outputStreamWriter = new OutputStreamWriter(new FileOutputStream(errorFile.toFile()), "UTF-8");
 		csvErrorFile = new CSVPrinter(new BufferedWriter(outputStreamWriter), CSVFormat.RFC4180.withQuoteMode(csvConfig.getOutputQuoteMode()));
 		for (String header : csvParser.getHeaderNames()) {
 			csvErrorFile.print(header);
