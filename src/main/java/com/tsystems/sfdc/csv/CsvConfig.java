@@ -47,25 +47,6 @@ public class CsvConfig {
 		this.inputFile = inputFile;
 	}
 
-	public String getOutputFileName(String fileNameAddition) {
-		return getOutputFileName(null, fileNameAddition);
-	}
-	
-	public String getOutputFileName(String subdirectory, String fileNameAddition) {
-		Path inputFilePath = Paths.get(inputFile.getFileName());
-		Path baseDir = inputFilePath.getParent();
-		Path fileName = inputFilePath.getFileName(); 
-
-		String targetFileName = StringUtils.stripFilenameExtension(fileName.toString()) + fileNameAddition.replaceAll("[\\\\/:*?\"<>|]", "") + "."
-				+ StringUtils.getFilenameExtension(fileName.toString());
-		
-		if (Strings.isNotBlank(subdirectory)) {
-			return Paths.get(baseDir.toString(), subdirectory, targetFileName).toString();
-		} else {
-			return Paths.get(baseDir.toString(), targetFileName).toString();
-		}
-	}
-
 	public QuoteMode getOutputQuoteMode() {
 		return outputQuoteMode;
 	}

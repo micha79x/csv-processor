@@ -29,7 +29,7 @@ public class CsvColumnRemove extends CsvFileProcessor {
 	@Override
 	protected void beforeProcessRecords() throws Exception {
 		List<String> columnsToBeRemoved = csvConfig.getColumns();
-		outputFile = Paths.get(csvConfig.getOutputFileName("_" + String.join("_", columnsToBeRemoved) + "_ColumnRemoved"));
+		outputFile = Paths.get(getCurrentOutputFileName("_" + String.join("_", columnsToBeRemoved) + "_ColumnRemoved"));
 		OutputStreamWriter outputStreamWriter = new OutputStreamWriter(new FileOutputStream(outputFile.toFile()), "UTF-8");
 		csvPrinter = new CSVPrinter(new BufferedWriter(outputStreamWriter), CSVFormat.RFC4180.withQuoteMode(csvConfig.getOutputQuoteMode()));
 

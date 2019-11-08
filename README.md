@@ -17,9 +17,11 @@ The output files created will always be encoded in UTF-8 and with comma as delim
 
 ## Common parameters
 
-* `csv.input-file.file-name` - Path to the input file
+* `csv.input-file.file-name` - Path to a single input file or a whole directory. If a directory is specified as input all CSV files existing in this directory will be processed.
 * `csv.input-file.encoding` - Character set the input file is encoded with - If not provided defaults to `UTF-8`
 * `csv.input-file.delimter` - Character used as column delimiter - If not provided defaults to `,`
+
+**Note:** If `csv.input-file.file-name` is pointing to a directory piping each single output file to the next processor is currently **not supported**. 
 
 ## CsvColumnRemove
 

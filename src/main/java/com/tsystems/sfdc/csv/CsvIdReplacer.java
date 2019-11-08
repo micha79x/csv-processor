@@ -46,7 +46,7 @@ public class CsvIdReplacer extends CsvFileProcessor {
 	}
 
 	private void prepareOutputFile() throws UnsupportedEncodingException, FileNotFoundException, IOException {
-		outputFile = Paths.get(csvConfig.getOutputFileName("_replaced"));
+		outputFile = Paths.get(getCurrentOutputFileName("_replaced"));
 		OutputStreamWriter outputStreamWriter = new OutputStreamWriter(new FileOutputStream(outputFile.toFile()), "UTF-8");
 		csvPrinter = new CSVPrinter(new BufferedWriter(outputStreamWriter), CSVFormat.RFC4180.withQuoteMode(csvConfig.getOutputQuoteMode()));
 		csvPrinter.printRecord(getCsvParser().getHeaderNames());

@@ -5,17 +5,22 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 
 public abstract class CsvFileProcessor implements CsvProcessor {
 	
@@ -31,13 +36,43 @@ public abstract class CsvFileProcessor implements CsvProcessor {
 	private boolean recordErrorOccured = false;
 
 	private Path errorFile;
+
+	private Path currentInputFile;
 	
 	public Path processFile() {
-		long currentRecordNumber = -1;
 		try {
 			String inputFileName = csvConfig.getInputFile().getFileName();
-			LOG.info("Processing file {}.", inputFileName);
 			Path inputFile = Paths.get(inputFileName);
+			if (Files.isDirectory(inputFile)) {
+				// We need to collect input files in a list before processing each file
+				// if we would process within the next for loop directly, it would also include 
+				// NEW CSV result files created during the processing itself 
+				List<Path> inputFiles = new ArrayList<>();
+				DirectoryStream<Path> stream = Files.newDirectoryStream(inputFile, "*.csv" );
+				for (Path singleFile : stream) {
+				    inputFiles.add(singleFile);
+				}
+				stream.close();
+
+				Path lastResult = null;
+				for (Path singleFile : inputFiles) {
+					lastResult = processSingleFile(singleFile);
+				}
+				return lastResult;
+			} else {
+				return processSingleFile(inputFile);
+			}
+		} catch (Exception e) {
+			LOG.error(e.getMessage());
+			return null;
+		}
+	}
+
+	private Path processSingleFile(Path inputFile) {
+		this.currentInputFile = inputFile;
+		long currentRecordNumber = -1;
+		try {
+			LOG.info("Processing file {}.", inputFile);
 			this.csvParser = CSVParser.parse(
 					inputFile, 
 					Charset.forName(csvConfig.getInputFile().getEncoding()), 
@@ -47,7 +82,7 @@ public abstract class CsvFileProcessor implements CsvProcessor {
 			LOG.info("Preparing processing records.");
 			this.beforeProcessRecords();
 			
-			LOG.info("Starting processing all records of input file {}.", inputFileName);
+			LOG.info("Started processing all records of input file {}.", inputFile);
 			for (CSVRecord record : csvParser) {
 				currentRecordNumber = csvParser.getRecordNumber();
 				try {
@@ -83,7 +118,7 @@ public abstract class CsvFileProcessor implements CsvProcessor {
 	}
 	
 	private void prepareErrorFile() throws Exception {
-		errorFile = Paths.get(csvConfig.getOutputFileName("_error"));
+		errorFile = Paths.get(this.getCurrentOutputFileName("_error"));
 		LOG.info("Creating error file {}.", errorFile);
 		OutputStreamWriter outputStreamWriter = new OutputStreamWriter(new FileOutputStream(errorFile.toFile()), "UTF-8");
 		csvErrorFile = new CSVPrinter(new BufferedWriter(outputStreamWriter), CSVFormat.RFC4180.withQuoteMode(csvConfig.getOutputQuoteMode()));
@@ -116,6 +151,30 @@ public abstract class CsvFileProcessor implements CsvProcessor {
 	
 	protected abstract void postProcessRecords() throws Exception;
 
-	protected abstract Path getOutputFile(); 
+	protected abstract Path getOutputFile();
+
+	protected Path getCurrentInputFile() {
+		return currentInputFile;
+	} 
+
+	protected String getCurrentOutputFileName(String fileNameAddition) {
+		return getCurrentOutputFileName(null, fileNameAddition);
+	}
+	
+	protected String getCurrentOutputFileName(String subdirectory, String fileNameAddition) {
+		Path inputFilePath = currentInputFile;
+		Path baseDir = inputFilePath.getParent();
+		Path fileName = inputFilePath.getFileName(); 
+
+		String targetFileName = StringUtils.stripFilenameExtension(fileName.toString()) + fileNameAddition.replaceAll("[\\\\/:*?\"<>|]", "").substring(0, Math.min(fileNameAddition.length(), 40)) + "."
+				+ StringUtils.getFilenameExtension(fileName.toString());
+		
+		if (Strings.isNotBlank(subdirectory)) {
+			return Paths.get(baseDir.toString(), subdirectory, targetFileName).toString();
+		} else {
+			return Paths.get(baseDir.toString(), targetFileName).toString();
+		}
+	}
+
 
 }

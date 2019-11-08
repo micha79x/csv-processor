@@ -79,9 +79,9 @@ public class CsvSplit extends CsvFileProcessor {
 				String keySuffix = key + ((counter > 1) ? "_" + counter : ""); // append "_2", "_3" ...
 				String outputFileName;
 				if (csvConfig.getSplit().isToSubfolder()) {
-					outputFileName = csvConfig.getOutputFileName("splits", "_Split_" + splitColumn + "_" + keySuffix);
+					outputFileName = getCurrentOutputFileName("splits", "_Split_" + splitColumn + "_" + keySuffix);
 				} else {
-					outputFileName = csvConfig.getOutputFileName("_Split_" + splitColumn + "_" + keySuffix);
+					outputFileName = getCurrentOutputFileName("_Split_" + splitColumn + "_" + keySuffix);
 				}
 				outputFile = Paths.get(outputFileName);
 				counter++;

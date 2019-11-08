@@ -39,7 +39,7 @@ public class CsvAttachmentExtract extends CsvFileProcessor {
 
 	@Override
 	protected void beforeProcessRecords() throws Exception {
-		outputFile = Paths.get(csvConfig.getOutputFileName("_BodyRemoved"));
+		outputFile = Paths.get(getCurrentOutputFileName("_BodyRemoved"));
 		filesOutputPath = Paths.get(outputFile.getParent().toString(), "binaries",
 				String.valueOf(System.currentTimeMillis()));
 		Files.createDirectories(filesOutputPath);
