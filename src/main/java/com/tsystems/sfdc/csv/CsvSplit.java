@@ -31,28 +31,30 @@ public class CsvSplit extends CsvFileProcessor {
 
 	private String splitColumn;
 
-	private String splitExpression;
+	private Expression spElExpression;
 
 	@Override
 	protected void beforeProcessRecords() throws Exception {
 		CsvConfigSplit splitConfig = csvConfig.getSplit();
 		splitColumn = splitConfig.getColumn();
-		splitExpression = splitConfig.getExpression();
+		if (Strings.isNotBlank(splitConfig.getExpression())) {
+			ExpressionParser parser = new SpelExpressionParser();
+			spElExpression = parser.parseExpression(splitConfig.getExpression());
+		}
 	}
 
 	@Override
 	protected void processRecord(CSVRecord record) throws Exception {
 		String value = record.get(splitColumn);
 		
-		// TODO expression
 		String key;
-		if (Strings.isBlank(splitExpression)) {
+		if (spElExpression == null) {
+			// No expression provided, use plain value as key
 			key = value;
 		} else {
-			ExpressionParser parser = new SpelExpressionParser();
-			Expression exp = parser.parseExpression(splitExpression);
+			// Extract key based on expression provided
 			EvaluationContext context = new StandardEvaluationContext(new CsvValue(value));
-			key = exp.getValue(context, String.class);
+			key = spElExpression.getValue(context, String.class);
 		}
 		
 		CSVPrinter csvPrinterByKey = getCsvPrinter(key);

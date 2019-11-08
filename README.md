@@ -57,7 +57,12 @@ Also, the resulting CSV file will have the base64-column removed and a new colum
 ## CsvSplit
 
 * `csv.split.column` - The column of which the single CSV record's value is used to determine the split bucket
-* `csv.split.expression` - The expression to be applied to the value extracted from column `csv.split.column`. If not provided the value itself will be used as split bucket.
+* `csv.split.expression` - The expression to be applied to the value extracted from column `csv.split.column`. If not provided the value itself will be used to create split "buckets". 
 * `csv.split.to-subfolder` - If set to true, the result files will be written to a sub folder named "splits"
 
- The process will create output files named after the input file appended by each bucket derived via `csv.split.expression`.
+ The process will create output files named after the input file appended by each bucket derived via `csv.split.expression`. 
+ In order to split by expression, the input property `csv.split.expression` will be parsed by the Spring Expression Language evaluator. One can refer to `value` in order to use the extracted value from the CSV record.
+ 
+ Example:
+ 
+ * `csv.split.expression=T(java.lang.Integer).parseInt(value) < 1000000 ? "a" : "b"` would create two split buckets "a" and "b" where the CSV file "a" would contain all records with a value lower than 1,000,000 and CSV file "b" with records with a value greater or equal to 1,000,000.      
