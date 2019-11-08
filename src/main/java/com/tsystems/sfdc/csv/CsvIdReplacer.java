@@ -17,6 +17,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +54,11 @@ public class CsvIdReplacer extends CsvFileProcessor {
 	}
 
 	private void collectMappingValues() throws IOException {
+		// if we run this process with multiple files only init the mapping once!
+		if (!replacementMap.isEmpty()) {
+			return;
+		}
+
 		for (CsvConfigMappingInput replacement : csvConfig.getReplacements()) {
 			CsvConfigFile file = replacement.getInputFile();
 			LOG.info("Reading file {} to collect replacement values.", file.getFileName());
@@ -62,11 +68,14 @@ public class CsvIdReplacer extends CsvFileProcessor {
 					Charset.forName(file.getEncoding()), 
 					CSVFormat.RFC4180.withHeader().withDelimiter(file.getDelimter()));
 			for (CSVRecord csvRecord : csvParser) {
-				String originalValue = csvRecord.get(replacement.getKeyCsvColumn());
-				String replacedValue = csvRecord.get(replacement.getReplacementCsvColumn());
-				String currentValue = replacementMap.putIfAbsent(originalValue, replacedValue);
+				String keyValue = csvRecord.get(replacement.getKeyCsvColumn());
+				if (Strings.isBlank(keyValue)) {
+					continue;
+				}
+				String replacmentValue = csvRecord.get(replacement.getReplacementCsvColumn());
+				String currentValue = replacementMap.putIfAbsent(keyValue, replacmentValue);
 				if (currentValue != null) {
-					LOG.warn("Duplicate replacement found for value {}: Wanted to map {} but already had {}", originalValue, replacedValue, currentValue);
+					LOG.warn("Duplicate replacement found for value {}: Wanted to map {} but already had {}", keyValue, replacmentValue, currentValue);
 				}
 			}
 			csvParser.close();
